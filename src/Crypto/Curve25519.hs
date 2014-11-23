@@ -1,5 +1,8 @@
 {-# LANGUAGE BangPatterns #-}
 
+-- This code was not written by Dan Octavian. It's written by AlephCloud systems
+-- and Dan Octavian made small modifications to it.
+
 -- ------------------------------------------------------ --
 -- Copyright © 2014 AlephCloud Systems, Inc.
 -- ------------------------------------------------------ --
@@ -20,6 +23,19 @@ module Crypto.Curve25519
     , combinePts
     , (.*)
     , dhArith
+    , SecretKey
+    , PublicKey
+    , basePt
+    , secretKeyToInteger
+    , integerToSecretKey 
+    , castDown
+    , fieldPToPublicKey
+    , characteristic
+    , a
+    , fieldToInt
+    , intToBS
+    , bsToInt
+    , montgomery
     ) where
 
 import Data.Ratio (numerator, denominator)
@@ -47,10 +63,12 @@ inv = xEuclid 1 0 0 1 where
             in xEuclid x1 y1 (x0-q*x1) (y0-q*y1) v r
 
 newtype FieldP = FieldP Integer
-    deriving (Eq, Show)
+    deriving (Eq, Show, Ord)
 
 p :: Integer
 p = 57896044618658097711785492504343953926634992332820282019728792003956564819949
+
+characteristic = p
 
 instance Num FieldP where
     (FieldP x) + (FieldP x') = FieldP ((x + x') `mod` p)
@@ -65,6 +83,8 @@ instance Fractional FieldP where
     fromRational q
         = fromInteger (numerator q)
         / fromInteger (denominator q)
+
+fieldToInt (FieldP i) = i
 
 data FieldPSq = FieldPSq FieldP FieldP
     deriving (Eq, Show)
@@ -92,6 +112,9 @@ instance Fractional FieldPSq where
     fromRational q
         = fromInteger (numerator q)
         / fromInteger (denominator q)
+
+
+castToInteger (FieldPSq (FieldP x) y) = x
 
 data Point k = InfPt | Pt k k
     deriving (Eq, Show)
@@ -206,6 +229,9 @@ publicKeyToFieldP (PublicKey bs) = fromInteger . os2ip $ B.reverse bs
 
 fieldPToPublicKey :: FieldP -> PublicKey
 fieldPToPublicKey (FieldP x) = PublicKey . B.reverse $ i2ospOf_ 32 x
+
+intToBS = B.reverse . (i2ospOf_ 32)
+bsToInt = os2ip . B.reverse
 
 dh :: SecretKey -> PublicKey -> PublicKey
 dh sk pk = fieldPToPublicKey $ dhArith (secretKeyToInteger sk) (publicKeyToFieldP pk)

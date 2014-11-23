@@ -1,57 +1,52 @@
-module Crypto.Elligator where
+{-# LANGUAGE OverloadedStrings #-}
 
+module Crypto.Elligator where
 {-
 slow implementation using Integer.
 -}
 
+import Crypto.Curve25519
+import Crypto.Number.Serialize
+
 import Data.ByteString as BS
 import Data.Bits
 import Prelude as P
+import Math.NumberTheory.Moduli (sqrtModP)
+import Data.Maybe
 
-{- all are 32 bytes long. should i properly type this using word 
--}
-type PrivateKey = ByteString
-type PublicKey = ByteString
 type Representative = ByteString
 
 {-
 field GF(2 ^ 255 - 19) - it's a galois field
-operations:
 
-add
-sub 
-mul
-pow
-invert
+The inverse map
+limitations - only points with these properties have uniform string representation:
+  1. u /= -A. (The value A is a parameter of Curve25519 and has the value 486662.)
+  2. -2u(u + A) is a square
 -}
 
-{-
-  nothing for now 
--}
+elligatorInv :: SecretKey -> Maybe (PublicKey, Representative)
+elligatorInv sk = if (isSquare u) then Just (fieldPToPublicKey u, repr)
+                  else Nothing
+  where
+    pubPt :: Point FieldPSq
+    pubPt@(Pt squ sqv) = (secretKeyToInteger sk) .* basePt -- can it be InfPt? 
+    u = castDown squ -- TODO: is this always safe?
+    v = castDown sqv
+    repr =  intToBS $ fromJust $
+            (flip sqrtModP) characteristic $ fieldToInt $ negate $
+            if v < (fromInteger $ (characteristic - 1) `div` 2)
+            then u * (recip $ 2 * (u + a))
+            else (u + a) * (recip $ 2 * u)
 
+-- the forward map
+elligator :: Representative -> PublicKey
+elligator repr = fieldPToPublicKey $  epsi * d
+  where
+    r = fromInteger $ bsToInt repr
+    d :: FieldP
+    d = negate $ a * (recip $ 1 + 2 * r ^ 2)
+    epsi = (d ^ 3 + a *  d * 2 + d) ^ ((characteristic - 1) `div` 2)
 
-data FE25519 = FE25519 {val :: Integer} deriving (Show, Eq)
-m25519 = 2 ^ 255 - 19
+isSquare = undefined
 
-applyFE f x = x {val = f $ val x}
-
-
-instance Num FE25519 where
- negate = applyFE ((\x -> x `mod` m25519) . negate)
- (+) x y = FE25519 $ (val x + val y) `mod` m25519
- (*) x y = FE25519 $ (val x * val y) `mod` m25519
- abs = applyFE abs
- signum = applyFE signum
- fromInteger = FE25519
-
-bits :: ByteString -> [Bool]
-bits = P.concat . P.map (\ b -> P.map (testBit b) [0..7]) . BS.unpack
-
-decodeFE25519 :: ByteString -> FE25519
-decodeFE25519 = P.sum . P.map (\(p, b) -> if b then 2 ^ p else 0) . P.zip [0..] . bits
-
-generatePubAndRandStr :: PrivateKey -> Maybe (PublicKey, Representative)
-generatePubAndRandStr = undefined
-
-representativeToPub :: Representative -> PublicKey
-representativeToPub = undefined
