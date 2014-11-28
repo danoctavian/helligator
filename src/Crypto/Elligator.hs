@@ -6,7 +6,10 @@ module Crypto.Elligator
   ) where
 
 {-
-slow implementation using Integer.
+slow implementation using Integer. fast enough for p2p applications.
+
+based on the reference implementation and description presented here
+https://www.imperialviolet.org/2013/12/25/elligator.html
 -}
 
 import Crypto.Curve25519
@@ -23,12 +26,14 @@ type Representative = ByteString
 
 
 {-
-field GF(2 ^ 255 - 19) - it's a galois field
+The inverse map - derives a public key and a rand string representation of it
+ from a private key
 
-The inverse map
 limitations - only points with these properties have uniform string representation:
   1. u /= -A. (The value A is a parameter of Curve25519 and has the value 486662.)
   2. -2u(u + A) is a square
+
+  we do not check for condition 1 since it's very unlikely
 -}
 
 elligatorInv :: SecretKey -> Maybe (PublicKey, Representative)
@@ -46,14 +51,16 @@ elligatorInv sk = if (isSquare $ 2 * u * (u + a))
             then u * (recip $ 2 * (u + a))
             else (u + a) * (recip $ 2 * u)
 
--- the forward map
+{- the forward map
+   derives the public key from a rand string representation
+-}
 elligator :: Representative -> PublicKey
 elligator repr = fieldPToPublicKey $ epsi * d  - (1 - epsi) * a * (recip 2)
   where
     r = fromInteger $ bsToInt repr
     d :: FieldP
     d = negate $ a * (recip $ 1 + 2 * r ^ 2)
-    epsi = squareExp (d ^ 3 + a *  d * 2 + d) 
+    epsi = squareExp (d ^ 3 + a *  d ^ 2 + d) 
     
 
 {- the result of squareExp is either 1 or -1 
