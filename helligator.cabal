@@ -27,6 +27,7 @@ library
                      , byteable ==0.1.*
                      , crypto-numbers ==0.2.*
                      , largeword ==1.2.*
+                     , binary ==0.7.*
   hs-source-dirs:      
     src
   default-language:    Haskell2010

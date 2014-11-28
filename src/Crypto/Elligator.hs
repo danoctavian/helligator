@@ -21,6 +21,7 @@ import Data.LargeWord
 
 type Representative = ByteString
 
+
 {-
 field GF(2 ^ 255 - 19) - it's a galois field
 

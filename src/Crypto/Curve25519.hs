@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- This code was not written by Dan Octavian. It's written by AlephCloud systems
 -- and Dan Octavian made small modifications to it.
@@ -36,6 +37,7 @@ module Crypto.Curve25519
     , intToBS
     , bsToInt
     , montgomery
+    , testKey1
     ) where
 
 import Data.Ratio (numerator, denominator)
@@ -43,6 +45,7 @@ import Math.NumberTheory.Moduli (sqrtModP)
 import Control.Applicative ((<|>), (<$>))
 import Data.Maybe (fromJust)
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Internal as B (unsafeCreate, memcpy)
 import Data.Byteable
@@ -51,8 +54,15 @@ import Data.Word
 import Foreign.Ptr (Ptr)
 import Foreign.Storable
 import Crypto.Number.Serialize
+import Data.LargeWord
+import Data.Binary as Bin
 
 --import Debug.Trace
+
+testKey :: SecretKey
+testKey = SecretKey "\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL"
+testKey1 :: SecretKey
+testKey1 = fromBytes $ B.concat $ [B.replicate 20 0, "\1\0", B.replicate 10 0]
 
 inv :: Integer -> Integer -> Integer
 inv = xEuclid 1 0 0 1 where
@@ -223,6 +233,8 @@ fromBytes bs
   where modifyByte :: Ptr Word8 -> Int -> (Word8 -> Word8) -> IO ()
         modifyByte p o f = peekByteOff p o >>= pokeByteOff p o . f
 
+toLazy bs = BSL.fromChunks [bs]
+
 integerToSecretKey :: Integer -> SecretKey
 integerToSecretKey x = SecretKey . B.reverse $ i2ospOf_ 32 x
 
@@ -231,6 +243,7 @@ secretKeyToInteger (SecretKey bs) = os2ip $ B.reverse bs
 
 publicKeyToFieldP :: PublicKey -> FieldP
 publicKeyToFieldP (PublicKey bs) = fromInteger . os2ip $ B.reverse bs
+
 
 fieldPToPublicKey :: FieldP -> PublicKey
 fieldPToPublicKey (FieldP x) = PublicKey . B.reverse $ i2ospOf_ 32 x
