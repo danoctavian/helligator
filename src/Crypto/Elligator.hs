@@ -1,6 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Crypto.Elligator where
+module Crypto.Elligator
+  ( elligator
+  , elligatorInv
+  ) where
+
 {-
 slow implementation using Integer.
 -}
@@ -13,6 +17,7 @@ import Data.Bits
 import Prelude as P
 import Math.NumberTheory.Moduli (sqrtModP)
 import Data.Maybe
+import Data.LargeWord
 
 type Representative = ByteString
 
@@ -26,7 +31,8 @@ limitations - only points with these properties have uniform string representati
 -}
 
 elligatorInv :: SecretKey -> Maybe (PublicKey, Representative)
-elligatorInv sk = if (isSquare u) then Just (fieldPToPublicKey u, repr)
+elligatorInv sk = if (isSquare $ 2 * u * (u + a))
+                  then Just (fieldPToPublicKey u, repr)
                   else Nothing
   where
     pubPt :: Point FieldPSq
@@ -41,12 +47,18 @@ elligatorInv sk = if (isSquare u) then Just (fieldPToPublicKey u, repr)
 
 -- the forward map
 elligator :: Representative -> PublicKey
-elligator repr = fieldPToPublicKey $  epsi * d
+elligator repr = fieldPToPublicKey $ epsi * d  - (1 - epsi) * a * (recip 2)
   where
     r = fromInteger $ bsToInt repr
     d :: FieldP
     d = negate $ a * (recip $ 1 + 2 * r ^ 2)
-    epsi = (d ^ 3 + a *  d * 2 + d) ^ ((characteristic - 1) `div` 2)
+    epsi = squareExp (d ^ 3 + a *  d * 2 + d) 
+    
 
-isSquare = undefined
+{- the result of squareExp is either 1 or -1 
+  if it's 1 then x is a square (modulo characteristic)
+-}
+
+squareExp x = x ^ ((characteristic - 1) `div` 2)
+isSquare = (== 1) . squareExp
 

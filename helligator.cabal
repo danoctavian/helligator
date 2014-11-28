@@ -26,6 +26,19 @@ library
                      , arithmoi ==0.4.*
                      , byteable ==0.1.*
                      , crypto-numbers ==0.2.*
+                     , largeword ==1.2.*
   hs-source-dirs:      
     src
   default-language:    Haskell2010
+
+Test-suite tests
+  Type:              exitcode-stdio-1.0
+  Hs-source-dirs:    tests
+  Main-is:           Properties.hs
+  Build-depends:       base >=4.7 && <4.8
+                     , helligator
+                     , QuickCheck ==2.7.*
+                     -- test-framework >= 0.3.3 && < 0.5,
+                     -- test-framework-quickcheck2 >= 0.2.9 && < 0.3,
+                     -- random == 1.0.*,
+                     -- text >= 0.11.0.5

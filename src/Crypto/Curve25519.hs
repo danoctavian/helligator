@@ -84,6 +84,11 @@ instance Fractional FieldP where
         = fromInteger (numerator q)
         / fromInteger (denominator q)
 
+{-
+instance Enum FieldP where
+  toEnum = fromInteger . fromIntegral  
+  fromEnum (FieldP x) = x
+-}
 fieldToInt (FieldP i) = i
 
 data FieldPSq = FieldPSq FieldP FieldP
