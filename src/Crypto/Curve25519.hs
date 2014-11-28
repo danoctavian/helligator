@@ -37,7 +37,6 @@ module Crypto.Curve25519
     , intToBS
     , bsToInt
     , montgomery
-    , testKey1
     ) where
 
 import Data.Ratio (numerator, denominator)
@@ -58,11 +57,6 @@ import Data.LargeWord
 import Data.Binary as Bin
 
 --import Debug.Trace
-
-testKey :: SecretKey
-testKey = SecretKey "\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL\NUL"
-testKey1 :: SecretKey
-testKey1 = fromBytes $ B.concat $ [B.replicate 20 0, "\1\0", B.replicate 10 0]
 
 inv :: Integer -> Integer -> Integer
 inv = xEuclid 1 0 0 1 where
@@ -94,11 +88,6 @@ instance Fractional FieldP where
         = fromInteger (numerator q)
         / fromInteger (denominator q)
 
-{-
-instance Enum FieldP where
-  toEnum = fromInteger . fromIntegral  
-  fromEnum (FieldP x) = x
--}
 fieldToInt (FieldP i) = i
 
 data FieldPSq = FieldPSq FieldP FieldP
