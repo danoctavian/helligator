@@ -10,7 +10,7 @@ import Crypto.Elligator
 import Crypto.Curve25519
 
 
--- TODO 
+-- TODO: implement tests
 
 inputKey :: SecretKey
 inputKey = fromBytes $ B.concat $ [B.replicate 20 0, "\1\0", B.replicate 10 0]
