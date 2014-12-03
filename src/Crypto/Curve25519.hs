@@ -37,6 +37,7 @@ module Crypto.Curve25519
     , intToBS
     , bsToInt
     , montgomery
+    , fromBytes
     ) where
 
 import Data.Ratio (numerator, denominator)

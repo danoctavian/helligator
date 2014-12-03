@@ -18,8 +18,8 @@ cabal-version:       >=1.10
 library
   exposed-modules:     
     Crypto.Elligator
-  other-modules:       
     Crypto.Curve25519
+  other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.7 && <4.8
                      , bytestring ==0.10.*
@@ -39,6 +39,7 @@ Test-suite tests
   Build-depends:       base >=4.7 && <4.8
                      , helligator
                      , QuickCheck ==2.7.*
+                     , bytestring ==0.10.*
                      -- test-framework >= 0.3.3 && < 0.5,
                      -- test-framework-quickcheck2 >= 0.2.9 && < 0.3,
                      -- random == 1.0.*,

@@ -70,3 +70,5 @@ elligator repr = fieldPToPublicKey $ epsi * d  - (1 - epsi) * a * (recip 2)
 squareExp x = x ^ ((characteristic - 1) `div` 2)
 isSquare = (== 1) . squareExp
 
+inputKey :: SecretKey
+inputKey = fromBytes $ BS.concat $ [BS.replicate 20 0, "\1\0", BS.replicate 10 0]
