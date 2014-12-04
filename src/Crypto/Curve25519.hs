@@ -36,7 +36,6 @@ module Crypto.Curve25519
     , fieldToInt
     , intToBS
     , bsToInt
-    , montgomery
     , fromBytes
     ) where
 
@@ -244,29 +243,3 @@ bsToInt = os2ip . B.reverse
 dh :: SecretKey -> PublicKey -> PublicKey
 dh sk pk = fieldPToPublicKey $ dhArith (secretKeyToInteger sk) (publicKeyToFieldP pk)
 
-montgomery :: Integer -> (FieldP , FieldP) -> (FieldP , FieldP)
-montgomery !k !xz | k<0 = montgomery (-k) xz
-montgomery 0 _ = (0,1)
-montgomery 1 !xz = xz
-montgomery 2 (!x,!z) =
-   let xmzsq = (x-z)^2
-       xpzsq = (x+z)^2
-       a' = 121665
-       d = xpzsq - xmzsq
-       x2 = xmzsq * xpzsq
-       z2 = d*(xpzsq + a'*d)
-   in (x2,z2)
-montgomery k xz | even k = montgomery 2 (montgomery (k `div` 2) xz)
-montgomery k (x,z) | odd k =
-     let n = 0 -- TODO: value was missing in original code. what should be here
-         m = n+1
-         (xn,zn) = montgomery n (x,z)
-         (xm,zm) = montgomery m (x,z)
-         d1 = (xm - zm)*(xn + zn)
-         d2 = (xm + zm)*(xn - zn)
-         xk = z * (d1 + d2)^2
-         zk = x * (d1 - d2)^2
-    in (xk,zk)
-
-montgomery' :: Integer -> FieldP -> FieldP
-montgomery' !k !x = uncurry (/) $ montgomery k (x,1)
