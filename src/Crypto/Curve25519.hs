@@ -23,7 +23,7 @@ module Crypto.Curve25519
     , sumPts
     , combinePts
     , (.*)
-    , dhArith
+    , dh 
     , SecretKey
     , PublicKey
     , basePt
@@ -37,6 +37,8 @@ module Crypto.Curve25519
     , intToBS
     , bsToInt
     , fromBytes
+    , pubFromWord256
+    , derivePublicKey
     ) where
 
 import Data.Ratio (numerator, denominator)
@@ -209,6 +211,15 @@ dhArith sk pk = castDown . x0 $
 newtype SecretKey = SecretKey ByteString deriving Show
 newtype PublicKey = PublicKey ByteString deriving Show
 
+instance Byteable PublicKey where
+  toBytes (PublicKey bs) = bs
+
+instance Byteable SecretKey where
+  toBytes (SecretKey bs) = bs
+
+pubFromWord256 :: Word256 -> PublicKey
+pubFromWord256 = PublicKey . BSL.toStrict . Bin.encode
+
 fromBytes :: ByteString -> SecretKey
 fromBytes bs
     | B.length bs /= 32 = error "secret key should be 32 bytes"
@@ -243,3 +254,6 @@ bsToInt = os2ip . B.reverse
 dh :: SecretKey -> PublicKey -> PublicKey
 dh sk pk = fieldPToPublicKey $ dhArith (secretKeyToInteger sk) (publicKeyToFieldP pk)
 
+-- derive a public key from a secret key
+derivePublicKey :: SecretKey -> PublicKey
+derivePublicKey sk = fieldPToPublicKey $ castDown . x0 $ (secretKeyToInteger sk) .* basePt

@@ -6,7 +6,7 @@ module Crypto.Elligator
   ) where
 
 {-
-slow implementation using Integer. fast enough for p2p applications.
+slow implementation using Integer.
 
 based on the reference implementation and description presented here
 https://www.imperialviolet.org/2013/12/25/elligator.html
@@ -33,7 +33,7 @@ limitations - only points with these properties have uniform string representati
   1. u /= -A. (The value A is a parameter of Curve25519 and has the value 486662.)
   2. -2u(u + A) is a square
 
-  we do not check for condition 1 since it's very unlikely
+  we do not check for condition 1 since it's very very unlikely
 -}
 
 elligatorInv :: SecretKey -> Maybe (PublicKey, Representative)
@@ -52,7 +52,7 @@ elligatorInv sk = if (isSquare $ 2 * u * (u + a))
             else (u + a) * (recip $ 2 * u)
 
 {- the forward map
-   derives the public key from a rand string representation
+   derives the public key from a random string representation
 -}
 elligator :: Representative -> PublicKey
 elligator repr = fieldPToPublicKey $ epsi * d  - (1 - epsi) * a * (recip 2)
@@ -69,6 +69,3 @@ elligator repr = fieldPToPublicKey $ epsi * d  - (1 - epsi) * a * (recip 2)
 
 squareExp x = x ^ ((characteristic - 1) `div` 2)
 isSquare = (== 1) . squareExp
-
-inputKey :: SecretKey
-inputKey = fromBytes $ BS.concat $ [BS.replicate 20 0, "\1\0", BS.replicate 10 0]
